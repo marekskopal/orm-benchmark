@@ -225,6 +225,7 @@
 					@var,
 					@param,
 					@return,
+					@phpstan-ignore-next-line,
 				"/>
             </property>
         </properties>

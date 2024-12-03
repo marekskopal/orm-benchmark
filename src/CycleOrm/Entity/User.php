@@ -6,6 +6,7 @@ namespace MarekSkopal\ORMBenchmark\CycleOrm\Entity;
 
 use Cycle\Annotated\Annotation\Column;
 use Cycle\Annotated\Annotation\Entity;
+use Cycle\Annotated\Annotation\Relation\RefersTo;
 use MarekSkopal\ORMBenchmark\CycleOrm\Repository\UserRepository;
 
 #[Entity(repository: UserRepository::class)]
@@ -13,15 +14,17 @@ class User
 {
     public function __construct(
         #[Column(type: 'primary')]
-        private int $id,
+        public int $id,
         #[Column(type: 'string')]
-        private string $firstName,
+        public string $firstName,
         #[Column(type: 'string')]
-        private string $lastName,
+        public string $lastName,
         #[Column(type: 'string')]
-        private string $email,
+        public string $email,
         #[Column(type: 'boolean')]
-        private bool $isActive,
+        public bool $isActive,
+        #[RefersTo(target: Address::class)]
+        public Address $address,
     ) {
     }
 }

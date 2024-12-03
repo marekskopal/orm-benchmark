@@ -12,10 +12,13 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use const E_ALL;
+use const E_DEPRECATED;
 
 final class ORMBenchmarkCommand extends Command
 {
-    private const int ROWS = 100000;
+    private const string ARGUMENT_ROWS = 'rows';
+    private const int ARGUMENT_ROWS_DEFAULT = 100000;
 
     /**
      * @var array<class-string, array{
@@ -32,12 +35,19 @@ final class ORMBenchmarkCommand extends Command
         $this
             ->setName('benchmark')
             ->setDescription('Run ORM benchmark');
+
+        $this->addArgument(self::ARGUMENT_ROWS, null, 'Number of rows', self::ARGUMENT_ROWS_DEFAULT);
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
+        error_reporting(E_ALL ^ E_DEPRECATED);
+
         $output->writeln('Initializing database...');
-        $this->initDb();
+
+        /** @var string $argumentRows */
+        $argumentRows = $input->getArgument(self::ARGUMENT_ROWS);
+        $this->initDb((int) $argumentRows);
 
         $output->writeln('Running benchmark...');
 
@@ -69,7 +79,7 @@ final class ORMBenchmarkCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function initDb(): void
+    private function initDb(int $userRows): void
     {
         $pdo = new PDO('sqlite:' . __DIR__ . '/../database.sqlite');
         $schema = file_get_contents(__DIR__ . '/Database/schema.sql');
@@ -79,9 +89,18 @@ final class ORMBenchmarkCommand extends Command
 
         $pdo->exec($schema);
 
-        for ($i = 0; $i < self::ROWS; $i++) {
+        $stmt = $pdo->prepare('INSERT INTO addresses (id, street, number, city, country) VALUES (:id, :street, :number, :city, :country)');
+        $stmt->execute([
+            'id' => 1,
+            'street' => 'Main Street',
+            'number' => '123',
+            'city' => 'New York',
+            'country' => 'USA',
+        ]);
+
+        for ($i = 0; $i < $userRows; $i++) {
             $stmt = $pdo->prepare(
-                'INSERT INTO users (id, first_name, last_name, email, is_active) VALUES (:id, :first_name, :last_name, :email, :is_active)',
+                'INSERT INTO users (id, first_name, last_name, email, is_active, address_id) VALUES (:id, :first_name, :last_name, :email, :is_active, :address_id)',
             );
             $stmt->execute([
                 'id' => $i + 1,
@@ -89,6 +108,7 @@ final class ORMBenchmarkCommand extends Command
                 'last_name' => Random::generate(),
                 'email' => Random::generate(5) . '@' . Random::generate(5) . '.com',
                 'is_active' => 1,
+                'address_id' => 1,
             ]);
         }
     }

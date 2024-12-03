@@ -9,7 +9,9 @@ use MarekSkopal\ORM\ORM;
 use MarekSkopal\ORM\Repository\RepositoryInterface;
 use MarekSkopal\ORM\Schema\Schema;
 use MarekSkopal\ORMBenchmark\BenchmarkInterface;
+use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\Address;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\User;
+use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Schema\AddressEntitySchema;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Schema\UserEntitySchema;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
 
@@ -51,6 +53,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
         $orm = new ORM($database, new Schema([
             User::class => UserEntitySchema::create(),
+            Address::class => AddressEntitySchema::create(),
         ]));
 
         return $orm->getRepository(User::class);

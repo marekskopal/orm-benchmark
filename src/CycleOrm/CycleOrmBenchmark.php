@@ -74,11 +74,11 @@ class CycleOrmBenchmark implements BenchmarkInterface
                 'default' => 'default',
                 'databases' => [
                     'default' => [
-                        'connection' => 'mariadb',
+                        'connection' => 'sqlite',
                     ],
                 ],
                 'connections' => [
-                    'mariadb' => new SQLiteDriverConfig(
+                    'sqlite' => new SQLiteDriverConfig(
                         connection: new FileConnectionConfig(
                             __DIR__ . '/../../database.sqlite',
                         ),
@@ -128,6 +128,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
         $orm = new ORM(new Factory($dbal), new Schema($schema));
 
+        //@phpstan-ignore-next-line
         return $orm->getRepository(User::class);
     }
 }

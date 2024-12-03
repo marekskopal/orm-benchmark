@@ -7,6 +7,8 @@ namespace MarekSkopal\ORMBenchmark\MarekSkopalOrm\Schema;
 use MarekSkopal\ORM\Schema\ColumnSchema;
 use MarekSkopal\ORM\Schema\EntitySchema;
 use MarekSkopal\ORM\Schema\Enum\PropertyTypeEnum;
+use MarekSkopal\ORM\Schema\Enum\RelationEnum;
+use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\Address;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\User;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Repository\UserRepository;
 
@@ -50,6 +52,14 @@ class UserEntitySchema
                     propertyType: PropertyTypeEnum::Bool,
                     columnName: 'is_active',
                     columnType: 'tinyint',
+                ),
+                'address' => new ColumnSchema(
+                    propertyName: 'address',
+                    propertyType: PropertyTypeEnum::Relation,
+                    columnName: 'address_id',
+                    columnType: 'int',
+                    relationType: RelationEnum::ManyToOne,
+                    relationEntityClass: Address::class,
                 ),
             ],
         );

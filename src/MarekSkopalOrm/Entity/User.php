@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity;
 
 use MarekSkopal\ORM\Attribute\Column;
+use MarekSkopal\ORM\Attribute\ManyToOne;
 
 final class User
 {
@@ -19,6 +20,8 @@ final class User
         public string $email,
         #[Column(type: 'tinyint(1)')]
         public bool $isActive,
+        #[ManyToOne(entityClass: Address::class)]
+        public Address $address,
     ) {
     }
 }
