@@ -16,7 +16,7 @@ class Address
         #[Column(type: 'string')]
         public string $street,
         #[Column(type: 'integer')]
-        public string $number,
+        public int $number,
         #[Column(type: 'string')]
         public string $city,
         #[Column(type: 'string')]

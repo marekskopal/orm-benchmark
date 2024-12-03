@@ -22,7 +22,8 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
         $userRepository = $this->init();
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
-            $userRepository->findOne(['id' => 1]);
+            $user = $userRepository->findOne(['id' => 1]);
+            $address = $user->address->city;
         });
     }
 
@@ -32,7 +33,8 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             for ($i = 0; $i < 1000; $i++) {
-                $userRepository->findOne(['id' => 1]);
+                $user = $userRepository->findOne(['id' => 1]);
+                $address = $user->address->city;
             }
         });
     }
@@ -41,8 +43,10 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
     {
         $userRepository = $this->init();
 
-        return BenchmarkTime::measure(function () use ($userRepository) {
-            return iterator_to_array($userRepository->find());
+        return BenchmarkTime::measure(function () use ($userRepository): void {
+            foreach (iterator_to_array($userRepository->find()) as $user) {
+                $address = $user->address->city;
+            };
         });
     }
 
