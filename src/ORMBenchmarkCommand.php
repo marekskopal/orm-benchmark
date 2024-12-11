@@ -100,11 +100,13 @@ final class ORMBenchmarkCommand extends Command
 
         for ($i = 0; $i < $userRows; $i++) {
             $stmt = $pdo->prepare(
-                'INSERT INTO users (id, first_name, last_name, email, is_active, address_id) VALUES (:id, :first_name, :last_name, :email, :is_active, :address_id)',
+                'INSERT INTO users (id, created_at, first_name, middle_name, last_name, email, is_active, address_id) VALUES (:id, :created_at, :first_name, :middle_name, :last_name, :email, :is_active, :address_id)',
             );
             $stmt->execute([
                 'id' => $i + 1,
+                'created_at' => date('Y-m-d H:i:s'),
                 'first_name' => Random::generate(),
+                'middle_name' => null,
                 'last_name' => Random::generate(),
                 'email' => Random::generate(5) . '@' . Random::generate(5) . '.com',
                 'is_active' => 1,

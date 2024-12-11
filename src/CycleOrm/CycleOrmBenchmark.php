@@ -44,7 +44,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             $user = $userRepository->findOne(['id' => 1]);
-            $address = $user->address->city;
+            $address = $user?->address->city;
         });
     }
 
@@ -55,7 +55,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
         return BenchmarkTime::measure(function () use ($userRepository): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = $userRepository->findOne(['id' => 1]);
-                $address = $user->address->city;
+                $address = $user?->address->city;
             }
         });
     }
@@ -64,7 +64,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
     {
         $userRepository = $this->init();
 
-        return BenchmarkTime::measure(function () use ($userRepository) {
+        return BenchmarkTime::measure(function () use ($userRepository): void {
             foreach ($userRepository->findAll() as $user) {
                 $address = $user->address->city;
             }
