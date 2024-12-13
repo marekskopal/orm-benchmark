@@ -10,9 +10,10 @@ use Cycle\Annotated\Annotation\Entity;
 #[Entity()]
 class Address
 {
+    #[Column(type: 'primary')]
+    public int $id;
+
     public function __construct(
-        #[Column(type: 'primary')]
-        public int $id,
         #[Column(type: 'string')]
         public string $street,
         #[Column(type: 'integer')]

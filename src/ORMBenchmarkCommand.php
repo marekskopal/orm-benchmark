@@ -26,9 +26,19 @@ final class ORMBenchmarkCommand extends Command
      *     selectOneRow: float,
      *     selectOneRowThousandTimes: float,
      *     selectAllRows: float,
-     * }> $results
+     * }> $selectResults
      */
-    private array $results = [];
+    private array $selectResults = [];
+
+    /**
+     * @var array<class-string, array{
+     *     name: string,
+     *     insertOneRow: float,
+     *     insertOneRowThousandTimes: float,
+     *     insertOneThousandRows: float,
+     * }> $insertResults
+     */
+    private array $insertResults = [];
 
     protected function configure(): void
     {
@@ -58,14 +68,23 @@ final class ORMBenchmarkCommand extends Command
 
         foreach ($benchmarkClasses as $benchmarkClassName => $benchmarkClass) {
             $benchmark = new $benchmarkClass();
-            $results = [
+
+            $selectResults = [
                 'name' => $benchmarkClassName,
                 'selectOneRow' => $benchmark->selectOneRow(),
                 'selectOneRowThousandTimes' => $benchmark->selectOneRowThousandTimes(),
                 'selectAllRows' => $benchmark->selectAllRows(),
             ];
+            $this->selectResults[$benchmarkClass] = $selectResults;
 
-            $this->results[$benchmarkClass] = $results;
+            $insertResults = [
+                'name' => $benchmarkClassName,
+                'insertOneRow' => $benchmark->insertOneRow(),
+                'insertOneRowThousandTimes' => $benchmark->insertOneRowThousandTimes(),
+                'insertOneThousandRows' => $benchmark->insertOneThousandRows(),
+            ];
+
+            $this->insertResults[$benchmarkClass] = $insertResults;
         }
 
         $output->writeln('Results:');
@@ -73,7 +92,13 @@ final class ORMBenchmarkCommand extends Command
         $table = new Table($output);
         $table
             ->setHeaders(['ORM', 'selectOneRow', 'selectOneRowThousandTimes', 'selectAllRows'])
-            ->setRows($this->results);
+            ->setRows($this->selectResults);
+        $table->render();
+
+        $table = new Table($output);
+        $table
+            ->setHeaders(['ORM', 'insertOneRow', 'insertOneRowThousandTimes', 'insertOneThousandRows'])
+            ->setRows($this->insertResults);
         $table->render();
 
         return Command::SUCCESS;

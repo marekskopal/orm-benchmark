@@ -12,9 +12,10 @@ use MarekSkopal\ORM\Attribute\ManyToOne;
 #[Entity]
 final class User
 {
+    #[Column(type: 'int', primary: true)]
+    public int $id;
+
     public function __construct(
-        #[Column(type: 'int', primary: true)]
-        public int $id,
         #[Column(type: 'datetime')]
         public DateTimeImmutable $createdAt,
         #[Column(type: 'varchar(255)')]

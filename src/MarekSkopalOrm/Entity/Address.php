@@ -10,9 +10,10 @@ use MarekSkopal\ORM\Attribute\Entity;
 #[Entity]
 final class Address
 {
+    #[Column(type: 'int', primary: true)]
+    public int $id;
+
     public function __construct(
-        #[Column(type: 'int', primary: true)]
-        public int $id,
         #[Column(type: 'varchar(255)')]
         public string $street,
         #[Column(type: 'int(11)')]

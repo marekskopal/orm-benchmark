@@ -13,9 +13,10 @@ use MarekSkopal\ORMBenchmark\CycleOrm\Repository\UserRepository;
 #[Entity(repository: UserRepository::class)]
 class User
 {
+    #[Column(type: 'primary')]
+    public int $id;
+
     public function __construct(
-        #[Column(type: 'primary')]
-        public int $id,
         #[Column(type: 'datetime')]
         public DateTimeImmutable $createdAt,
         #[Column(type: 'string')]
