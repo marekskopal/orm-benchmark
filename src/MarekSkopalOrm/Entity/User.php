@@ -8,25 +8,26 @@ use DateTimeImmutable;
 use MarekSkopal\ORM\Attribute\Column;
 use MarekSkopal\ORM\Attribute\Entity;
 use MarekSkopal\ORM\Attribute\ManyToOne;
+use MarekSkopal\ORM\Enum\Type;
 
 #[Entity]
 final class User
 {
-    #[Column(type: 'int', primary: true)]
+    #[Column(type: Type::Int, primary: true, autoIncrement: true)]
     public int $id;
 
     public function __construct(
-        #[Column(type: 'datetime')]
+        #[Column(type: Type::DateTime)]
         public DateTimeImmutable $createdAt,
-        #[Column(type: 'varchar(255)')]
+        #[Column(type: Type::String, size: 255)]
         public string $firstName,
-        #[Column(type: 'varchar(255)', nullable: true)]
+        #[Column(type: Type::String, size: 255, nullable: true)]
         public ?string $middleName,
-        #[Column(type: 'varchar(255)')]
+        #[Column(type: Type::String, size: 255)]
         public string $lastName,
-        #[Column(type: 'varchar(255)')]
+        #[Column(type: Type::String, size: 255)]
         public string $email,
-        #[Column(type: 'tinyint(1)')]
+        #[Column(type: Type::Boolean)]
         public bool $isActive,
         #[ManyToOne(entityClass: Address::class)]
         public Address $address,
