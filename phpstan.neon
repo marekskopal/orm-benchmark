@@ -5,3 +5,12 @@ parameters:
         processTimeout: 300.0
     paths:
        - src
+    excludePaths:
+       - src/Propel/generated
+    ignoreErrors:
+       - path: src/CycleOrm/CycleOrmBenchmark.php
+         message: '#(Access to an undefined property TEntity|Cannot access property \$city on mixed)#'
+       - path: src/RedBeanPhp/RedBeanPhpBenchmark.php
+         message: '#(Access to an undefined property|Cannot cast mixed to int)#'
+       - path: src/Propel/PropelBenchmark.php
+         message: '#Using nullsafe method call on non-nullable type#'

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database name="default" defaultIdMethod="native" namespace="MarekSkopal\ORMBenchmark\Propel\generated">
+    <table name="addresses" phpName="Address">
+        <column name="id" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
+        <column name="street" type="VARCHAR" size="255" required="true"/>
+        <column name="number" type="INTEGER" required="true"/>
+        <column name="city" type="VARCHAR" size="255" required="true"/>
+        <column name="country" type="VARCHAR" size="255" required="true"/>
+    </table>
+
+    <table name="users" phpName="User">
+        <column name="id" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
+        <column name="created_at" type="TIMESTAMP" required="true"/>
+        <column name="first_name" type="VARCHAR" size="255" required="true"/>
+        <column name="middle_name" type="VARCHAR" size="255" required="false"/>
+        <column name="last_name" type="VARCHAR" size="255" required="true"/>
+        <column name="email" type="VARCHAR" size="255" required="true"/>
+        <column name="is_active" type="TINYINT" required="true"/>
+        <column name="address_id" type="INTEGER" required="true"/>
+        <foreign-key foreignTable="addresses">
+            <reference local="address_id" foreign="id"/>
+        </foreign-key>
+    </table>
+</database>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <propel>
+        <database>
+            <connections>
+                <connection id="default">
+                    <adapter>sqlite</adapter>
+                    <dsn>sqlite:database.sqlite</dsn>
+                    <user></user>
+                    <password></password>
+                </connection>
+            </connections>
+        </database>
+        <generator>
+            <defaultConnection>default</defaultConnection>
+            <connections>
+                <connection>default</connection>
+            </connections>
+        </generator>
+        <runtime>
+            <defaultConnection>default</defaultConnection>
+            <connections>
+                <connection>default</connection>
+            </connections>
+        </runtime>
+    </propel>
+</config>

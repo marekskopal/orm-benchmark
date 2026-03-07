@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace MarekSkopal\ORMBenchmark;
 
 use MarekSkopal\ORMBenchmark\CycleOrm\CycleOrmBenchmark;
+use MarekSkopal\ORMBenchmark\DoctrineOrm\DoctrineOrmBenchmark;
+use MarekSkopal\ORMBenchmark\Eloquent\EloquentBenchmark;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\MarekSkopalOrmBenchmark;
+use MarekSkopal\ORMBenchmark\Propel\PropelBenchmark;
+use MarekSkopal\ORMBenchmark\RedBeanPhp\RedBeanPhpBenchmark;
 use Nette\Utils\Random;
 use PDO;
 use Symfony\Component\Console\Command\Command;
@@ -64,6 +68,10 @@ final class ORMBenchmarkCommand extends Command
         $benchmarkClasses = [
             'MarekSkopalORM' => MarekSkopalOrmBenchmark::class,
             'CycleORM' => CycleOrmBenchmark::class,
+            'DoctrineORM' => DoctrineOrmBenchmark::class,
+            'Eloquent' => EloquentBenchmark::class,
+            'Propel' => PropelBenchmark::class,
+            'RedBeanPHP' => RedBeanPhpBenchmark::class,
         ];
 
         foreach ($benchmarkClasses as $benchmarkClassName => $benchmarkClass) {
