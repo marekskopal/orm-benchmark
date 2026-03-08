@@ -36,25 +36,25 @@ Benchmark run with 100,000 pre-seeded rows. All times in milliseconds.
 
 Select in milliseconds:
 
-| ORM            | selectOneRow | selectOneRowThousandTimes | selectAllRows |
-| -------------- | -----------: | ------------------------: | ------------: |
-| MarekSkopalORM | 3.044583     | 19.0925                   | 848.438833    |
-| CycleORM       | 5.46425      | 34.584292                 | 1864.360875   |
-| DoctrineORM    | 18.903125    | 77.563792                 | 1523.257625   |
-| Eloquent       | 18.160625    | 227.729416                | 1269.457625   |
-| Propel         | 9.638125     | 2.802667                  | 937.7775      |
-| RedBeanPHP     | 1.490666     | 12.522959                 | 1493.386792   |
+| ORM            | Version      | selectOneRow | selectOneRowThousandTimes | selectAllRows |
+| -------------- | ------------ | -----------: | ------------------------: | ------------: |
+| MarekSkopalORM | v1.0.0       | 0.788792     | 18.823917                 | 926.1495      |
+| CycleORM       | v2.14.3      | 6.466959     | 32.277833                 | 1847.869375   |
+| DoctrineORM    | 3.6.2        | 19.119625    | 76.220916                 | 1514.44       |
+| Eloquent       | v12.53.0     | 17.362958    | 208.66975                 | 1267.275583   |
+| Propel         | dev-master   | 8.93025      | 2.765291                  | 940.344958    |
+| RedBeanPHP     | v5.7.5       | 1.286417     | 11.993833                 | 1462.891916   |
 
 Insert in milliseconds:
 
-| ORM            | insertOneRow | insertOneRowThousandTimes | insertOneThousandRows |
-| -------------- | -----------: | ------------------------: | --------------------: |
-| MarekSkopalORM | 0.894792     | 371.145958                | 456.226334            |
-| CycleORM       | 2.661042     | 414.902334                | 481.423667            |
-| DoctrineORM    | 3.363875     | 4576.803708               | 4678.412584           |
-| Eloquent       | 3.898042     | 468.036667                | 488.999166            |
-| Propel         | 0.953958     | 408.288458                | 435.116792            |
-| RedBeanPHP     | 1.201084     | 402.387625                | 444.830458            |
+| ORM            | Version      | insertOneRow | insertOneRowThousandTimes | insertOneThousandRows |
+| -------------- | ------------ | -----------: | ------------------------: | --------------------: |
+| MarekSkopalORM | v1.0.0       | 2.954166     | 327.037625                | 385.491417            |
+| CycleORM       | v2.14.3      | 3.853875     | 449.497333                | 453.769375            |
+| DoctrineORM    | 3.6.2        | 404.938875   | 4596.686042               | 4744.7745             |
+| Eloquent       | v12.53.0     | 2.958917     | 406.851                   | 416.847208            |
+| Propel         | dev-master   | 1.201125     | 364.065                   | 369.997               |
+| RedBeanPHP     | v5.7.5       | 2.137125     | 418.91725                 | 359.562958            |
 
 
 
