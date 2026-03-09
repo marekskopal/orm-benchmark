@@ -10,6 +10,7 @@ use MarekSkopal\ORMBenchmark\Eloquent\EloquentBenchmark;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\MarekSkopalOrmBenchmark;
 use MarekSkopal\ORMBenchmark\Propel\PropelBenchmark;
 use MarekSkopal\ORMBenchmark\RedBeanPhp\RedBeanPhpBenchmark;
+use MarekSkopal\ORMBenchmark\Utils\BenchmarkStats;
 use Nette\Utils\Random;
 use PDO;
 use Symfony\Component\Console\Command\Command;
@@ -23,13 +24,14 @@ final class ORMBenchmarkCommand extends Command
 {
     private const string ARGUMENT_ROWS = 'rows';
     private const int ARGUMENT_ROWS_DEFAULT = 100000;
+    private const int BENCHMARK_RUNS = 5;
 
     /**
      * @var array<class-string, array{
      *     name: string,
-     *     selectOneRow: float,
-     *     selectOneRowThousandTimes: float,
-     *     selectAllRows: float,
+     *     selectOneRow: list<float>,
+     *     selectOneRowThousandTimes: list<float>,
+     *     selectAllRows: list<float>,
      * }> $selectResults
      */
     private array $selectResults = [];
@@ -37,9 +39,18 @@ final class ORMBenchmarkCommand extends Command
     /**
      * @var array<class-string, array{
      *     name: string,
-     *     insertOneRow: float,
-     *     insertOneRowThousandTimes: float,
-     *     insertOneThousandRows: float,
+     *     updateOneRow: list<float>,
+     *     updateOneRowThousandTimes: list<float>,
+     * }> $updateResults
+     */
+    private array $updateResults = [];
+
+    /**
+     * @var array<class-string, array{
+     *     name: string,
+     *     insertOneRow: list<float>,
+     *     insertOneRowThousandTimes: list<float>,
+     *     insertOneThousandRows: list<float>,
      * }> $insertResults
      */
     private array $insertResults = [];
@@ -57,13 +68,15 @@ final class ORMBenchmarkCommand extends Command
     {
         error_reporting(E_ALL ^ E_DEPRECATED);
 
+        $this->printEnvironment($output);
+
         $output->writeln('Initializing database...');
 
         /** @var string $argumentRows */
         $argumentRows = $input->getArgument(self::ARGUMENT_ROWS);
         $this->initDb((int) $argumentRows);
 
-        $output->writeln('Running benchmark...');
+        $output->writeln('Running benchmark (' . self::BENCHMARK_RUNS . ' runs each)...');
 
         $benchmarkClasses = [
             'MarekSkopalORM' => MarekSkopalOrmBenchmark::class,
@@ -75,41 +88,110 @@ final class ORMBenchmarkCommand extends Command
         ];
 
         foreach ($benchmarkClasses as $benchmarkClassName => $benchmarkClass) {
+            $output->writeln('  ' . $benchmarkClassName . '...');
+
             $benchmark = new $benchmarkClass();
 
             $selectResults = [
                 'name' => $benchmarkClassName,
-                'selectOneRow' => $benchmark->selectOneRow(),
-                'selectOneRowThousandTimes' => $benchmark->selectOneRowThousandTimes(),
-                'selectAllRows' => $benchmark->selectAllRows(),
+                'selectOneRow' => [],
+                'selectOneRowThousandTimes' => [],
+                'selectAllRows' => [],
             ];
-            $this->selectResults[$benchmarkClass] = $selectResults;
-
+            $updateResults = [
+                'name' => $benchmarkClassName,
+                'updateOneRow' => [],
+                'updateOneRowThousandTimes' => [],
+            ];
             $insertResults = [
                 'name' => $benchmarkClassName,
-                'insertOneRow' => $benchmark->insertOneRow(),
-                'insertOneRowThousandTimes' => $benchmark->insertOneRowThousandTimes(),
-                'insertOneThousandRows' => $benchmark->insertOneThousandRows(),
+                'insertOneRow' => [],
+                'insertOneRowThousandTimes' => [],
+                'insertOneThousandRows' => [],
             ];
 
+            for ($run = 0; $run < self::BENCHMARK_RUNS; $run++) {
+                $selectResults['selectOneRow'][] = $benchmark->selectOneRow();
+                $selectResults['selectOneRowThousandTimes'][] = $benchmark->selectOneRowThousandTimes();
+                $selectResults['selectAllRows'][] = $benchmark->selectAllRows();
+                $updateResults['updateOneRow'][] = $benchmark->updateOneRow();
+                $updateResults['updateOneRowThousandTimes'][] = $benchmark->updateOneRowThousandTimes();
+                $insertResults['insertOneRow'][] = $benchmark->insertOneRow();
+                $insertResults['insertOneRowThousandTimes'][] = $benchmark->insertOneRowThousandTimes();
+                $insertResults['insertOneThousandRows'][] = $benchmark->insertOneThousandRows();
+            }
+
+            $this->selectResults[$benchmarkClass] = $selectResults;
+            $this->updateResults[$benchmarkClass] = $updateResults;
             $this->insertResults[$benchmarkClass] = $insertResults;
         }
 
-        $output->writeln('Results:');
+        $output->writeln('');
+        $output->writeln('Results (median ±stddev, ms, ' . self::BENCHMARK_RUNS . ' runs):');
 
         $table = new Table($output);
         $table
             ->setHeaders(['ORM', 'selectOneRow', 'selectOneRowThousandTimes', 'selectAllRows'])
-            ->setRows($this->selectResults);
+            ->setRows(array_map(
+                fn(array $r): array => [
+                    $r['name'],
+                    BenchmarkStats::format($r['selectOneRow']),
+                    BenchmarkStats::format($r['selectOneRowThousandTimes']),
+                    BenchmarkStats::format($r['selectAllRows']),
+                ],
+                $this->selectResults,
+            ));
+        $table->render();
+
+        $table = new Table($output);
+        $table
+            ->setHeaders(['ORM', 'updateOneRow', 'updateOneRowThousandTimes'])
+            ->setRows(array_map(
+                fn(array $r): array => [
+                    $r['name'],
+                    BenchmarkStats::format($r['updateOneRow']),
+                    BenchmarkStats::format($r['updateOneRowThousandTimes']),
+                ],
+                $this->updateResults,
+            ));
         $table->render();
 
         $table = new Table($output);
         $table
             ->setHeaders(['ORM', 'insertOneRow', 'insertOneRowThousandTimes', 'insertOneThousandRows'])
-            ->setRows($this->insertResults);
+            ->setRows(array_map(
+                fn(array $r): array => [
+                    $r['name'],
+                    BenchmarkStats::format($r['insertOneRow']),
+                    BenchmarkStats::format($r['insertOneRowThousandTimes']),
+                    BenchmarkStats::format($r['insertOneThousandRows']),
+                ],
+                $this->insertResults,
+            ));
         $table->render();
 
         return Command::SUCCESS;
+    }
+
+    private function printEnvironment(OutputInterface $output): void
+    {
+        $opcache = function_exists('opcache_get_status')
+            ? ((opcache_get_status(false)['opcache_enabled'] ?? false) ? 'enabled' : 'disabled')
+            : 'n/a';
+
+        $cpu = trim((string) shell_exec('sysctl -n machdep.cpu.brand_string 2>/dev/null'));
+        if ($cpu === '') {
+            $cpuLine = (string) shell_exec('grep -m1 "model name" /proc/cpuinfo 2>/dev/null');
+            $cpu = trim(explode(':', $cpuLine)[1] ?? 'unknown');
+        }
+
+        $output->writeln('Environment:');
+        $output->writeln('  PHP:     ' . PHP_VERSION);
+        $output->writeln('  OPcache: ' . $opcache);
+        $output->writeln('  OS:      ' . php_uname('s') . ' ' . php_uname('r') . ' ' . php_uname('m'));
+        $output->writeln('  CPU:     ' . ($cpu !== '' ? $cpu : 'unknown'));
+        $output->writeln('  Runs:    ' . self::BENCHMARK_RUNS . ' per method');
+        $output->writeln('');
     }
 
     private function initDb(int $userRows): void
@@ -122,19 +204,14 @@ final class ORMBenchmarkCommand extends Command
 
         $pdo->exec($schema);
 
-        $stmt = $pdo->prepare('INSERT INTO addresses (id, street, number, city, country) VALUES (:id, :street, :number, :city, :country)');
-        $stmt->execute([
-            'id' => 1,
-            'street' => 'Main Street',
-            'number' => '123',
-            'city' => 'New York',
-            'country' => 'USA',
-        ]);
+        $pdo->exec('INSERT INTO addresses (id, street, number, city, country) VALUES (1, \'Main Street\', 123, \'New York\', \'USA\')');
 
+        $stmt = $pdo->prepare(
+            'INSERT INTO users (id, created_at, first_name, middle_name, last_name, email, is_active, address_id) VALUES (:id, :created_at, :first_name, :middle_name, :last_name, :email, :is_active, :address_id)',
+        );
+
+        $pdo->beginTransaction();
         for ($i = 0; $i < $userRows; $i++) {
-            $stmt = $pdo->prepare(
-                'INSERT INTO users (id, created_at, first_name, middle_name, last_name, email, is_active, address_id) VALUES (:id, :created_at, :first_name, :middle_name, :last_name, :email, :is_active, :address_id)',
-            );
             $stmt->execute([
                 'id' => $i + 1,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -146,5 +223,6 @@ final class ORMBenchmarkCommand extends Command
                 'address_id' => 1,
             ]);
         }
+        $pdo->commit();
     }
 }

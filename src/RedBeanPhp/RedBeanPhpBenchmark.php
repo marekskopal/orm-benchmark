@@ -47,6 +47,28 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
         });
     }
 
+    public function updateOneRow(): float
+    {
+        $user = R::load('users', 1);
+
+        return BenchmarkTime::measure(function () use ($user): void {
+            $user->first_name = 'Updated';
+            R::store($user);
+        });
+    }
+
+    public function updateOneRowThousandTimes(): float
+    {
+        $user = R::load('users', 1);
+
+        return BenchmarkTime::measure(function () use ($user): void {
+            for ($i = 0; $i < 1000; $i++) {
+                $user->first_name = 'Updated' . $i;
+                R::store($user);
+            }
+        });
+    }
+
     public function insertOneRow(): float
     {
         return BenchmarkTime::measure(function (): void {
@@ -82,6 +104,8 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
     public function insertOneThousandRows(): float
     {
         return BenchmarkTime::measure(function (): void {
+            R::begin();
+
             for ($i = 0; $i < 1000; $i++) {
                 $user = R::dispense('users');
                 $user->created_at = date('Y-m-d H:i:s');
@@ -93,6 +117,8 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
                 $user->address_id = 1;
                 R::store($user);
             }
+
+            R::commit();
         });
     }
 }

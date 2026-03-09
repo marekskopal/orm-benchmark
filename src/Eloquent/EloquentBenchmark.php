@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace MarekSkopal\ORMBenchmark\Eloquent;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Connection;
 use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\Eloquent\Model\User;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
 
 class EloquentBenchmark implements BenchmarkInterface
 {
+    private Connection $connection;
+
     public function __construct()
     {
         $capsule = new Capsule();
@@ -20,6 +23,8 @@ class EloquentBenchmark implements BenchmarkInterface
         ]);
         $capsule->setAsGlobal();
         $capsule->bootEloquent();
+
+        $this->connection = $capsule->getConnection();
     }
 
     public function selectOneRow(): float
@@ -46,6 +51,30 @@ class EloquentBenchmark implements BenchmarkInterface
             $users = User::with('address')->get();
             foreach ($users as $user) {
                 $city = $user->address?->city;
+            }
+        });
+    }
+
+    public function updateOneRow(): float
+    {
+        $user = User::find(1);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($user): void {
+            $user->first_name = 'Updated';
+            $user->save();
+        });
+    }
+
+    public function updateOneRowThousandTimes(): float
+    {
+        $user = User::find(1);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($user): void {
+            for ($i = 0; $i < 1000; $i++) {
+                $user->first_name = 'Updated' . $i;
+                $user->save();
             }
         });
     }
@@ -87,6 +116,8 @@ class EloquentBenchmark implements BenchmarkInterface
     public function insertOneThousandRows(): float
     {
         return BenchmarkTime::measure(function (): void {
+            $this->connection->beginTransaction();
+
             for ($i = 0; $i < 1000; $i++) {
                 $user = new User([
                     'created_at' => date('Y-m-d H:i:s'),
@@ -99,6 +130,8 @@ class EloquentBenchmark implements BenchmarkInterface
                 ]);
                 $user->save();
             }
+
+            $this->connection->commit();
         });
     }
 }

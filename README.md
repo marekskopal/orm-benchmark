@@ -38,6 +38,8 @@ Each benchmark method measures **only the ORM operation itself** — no ORM init
 
 Every benchmark method runs against a freshly created ORM instance (empty identity map) so that results from one method cannot influence the next.
 
+Each method is run **5 times** and results are reported as **median ± standard deviation** to reduce noise from OS scheduling and CPU frequency scaling.
+
 ### Benchmarked operations
 
 | Method | Description |
@@ -45,13 +47,15 @@ Every benchmark method runs against a freshly created ORM instance (empty identi
 | `selectOneRow` | Fetch a single user by primary key including its related address |
 | `selectOneRowThousandTimes` | Repeat the same single-row fetch 1,000 times; ORM identity map / instance pool is cleared before each iteration to force real database queries |
 | `selectAllRows` | Fetch all rows from the users table including related addresses |
+| `updateOneRow` | Fetch a single user, change a field, and persist the update |
+| `updateOneRowThousandTimes` | Fetch a user once, then update and persist the same entity 1,000 times |
 | `insertOneRow` | Insert one user row and persist it to the database |
-| `insertOneRowThousandTimes` | Insert and persist 1,000 user rows one by one; managed-entity sets are kept minimal after each flush to prevent identity-map growth |
-| `insertOneThousandRows` | Same as above but with unique field values per row |
+| `insertOneRowThousandTimes` | Insert and persist 1,000 user rows one by one (1,000 separate commits) |
+| `insertOneThousandRows` | Insert 1,000 user rows in a single transaction / batch flush |
 
 ### Database
 
-SQLite file database seeded with the configured number of user rows (default 100,000) and one shared address row. The schema is recreated from scratch before each run.
+SQLite file database seeded with the configured number of user rows (default 100,000) and one shared address row. The schema is recreated from scratch before each run. Seeding runs inside a single transaction.
 
 ### Timing
 
@@ -59,29 +63,40 @@ PHP `hrtime()` is used for nanosecond-precision wall-clock measurement. Results 
 
 ## Results
 
-Benchmark run on macOS with 100,000 pre-seeded rows. All times in milliseconds.
+Environment: PHP 8.5.3, OPcache disabled, Apple M1 Max, macOS, 100,000 pre-seeded rows, 5 runs per method. All times in milliseconds (median ±stddev).
 
-Select in milliseconds:
+Select:
 
-| ORM            | Version      | selectOneRow | selectOneRowThousandTimes | selectAllRows |
-| -------------- | ------------ | -----------: | ------------------------: | ------------: |
-| MarekSkopalORM | v1.0.1       | 1.944        | 20.476                    | 974.284       |
-| CycleORM       | v2.14.3      | 11.521       | 74.785                    | 1906.815      |
-| DoctrineORM    | 3.6.2        | 14.518       | 79.710                    | 1582.312      |
-| Eloquent       | v12.53.0     | 19.783       | 146.378                   | 1381.524      |
-| Propel         | dev-master   | 10.603       | 32.122                    | 939.237       |
-| RedBeanPHP     | v5.7.5       | 1.350        | 11.782                    | 1430.958      |
+| ORM            | Version    | selectOneRow  | selectOneRowThousandTimes | selectAllRows      |
+| -------------- | ---------- | ------------: | ------------------------: | -----------------: |
+| MarekSkopalORM | v1.0.1     | 0.148 ±0.680  | 17.896 ±1.097             | 898.878 ±31.232    |
+| CycleORM       | v2.14.3    | 0.442 ±4.589  | 72.620 ±2.006             | 2046.867 ±61.092   |
+| DoctrineORM    | 3.6.2      | 0.357 ±5.091  | 80.458 ±3.187             | 1768.364 ±42.275   |
+| Eloquent       | v12.53.0   | 0.382 ±5.420  | 150.493 ±6.697            | 1731.280 ±94.030   |
+| Propel         | dev-master | 0.024 ±4.467  | 54.494 ±9.662             | 1303.625 ±83.378   |
+| RedBeanPHP     | v5.7.5     | 0.238 ±0.516  | 12.324 ±1.024             | 2185.548 ±70.746   |
 
-Insert in milliseconds:
+Update:
 
-| ORM            | Version      | insertOneRow | insertOneRowThousandTimes | insertOneThousandRows |
-| -------------- | ------------ | -----------: | ------------------------: | --------------------: |
-| MarekSkopalORM | v1.0.1       | 4.456        | 398.978                   | 357.114               |
-| CycleORM       | v2.14.3      | 3.359        | 453.730                   | 458.137               |
-| DoctrineORM    | 3.6.2        | 1.618        | 417.364                   | 501.518               |
-| Eloquent       | v12.53.0     | 3.170        | 447.192                   | 478.295               |
-| Propel         | dev-master   | 1.146        | 394.666                   | 416.278               |
-| RedBeanPHP     | v5.7.5       | 2.112        | 357.774                   | 408.059               |
+| ORM            | Version    | updateOneRow  | updateOneRowThousandTimes |
+| -------------- | ---------- | ------------: | ------------------------: |
+| MarekSkopalORM | v1.0.1     | 1.012 ±0.284  | 344.804 ±59.430           |
+| CycleORM       | v2.14.3    | 1.244 ±1.063  | 380.753 ±9.827            |
+| DoctrineORM    | 3.6.2      | 0.778 ±0.117  | 346.972 ±24.206           |
+| Eloquent       | v12.53.0   | 0.915 ±0.848  | 445.381 ±86.441           |
+| Propel         | dev-master | 0.887 ±0.977  | 353.564 ±22.276           |
+| RedBeanPHP     | v5.7.5     | 0.915 ±0.077  | 387.193 ±50.980           |
+
+Insert:
+
+| ORM            | Version    | insertOneRow  | insertOneRowThousandTimes | insertOneThousandRows |
+| -------------- | ---------- | ------------: | ------------------------: | --------------------: |
+| MarekSkopalORM | v1.0.1     | 0.498 ±0.156  | 467.341 ±52.176           | 12.928 ±0.272         |
+| CycleORM       | v2.14.3    | 0.558 ±0.534  | 476.735 ±71.822           | 48.111 ±0.230         |
+| DoctrineORM    | 3.6.2      | 0.644 ±0.903  | 483.060 ±40.132           | 45.615 ±1.698         |
+| Eloquent       | v12.53.0   | 0.533 ±0.045  | 459.674 ±87.618           | 78.020 ±5.859         |
+| Propel         | dev-master | 0.435 ±0.030  | 416.375 ±56.386           | 18.498 ±0.390         |
+| RedBeanPHP     | v5.7.5     | 0.494 ±0.764  | 524.459 ±72.586           | 36.314 ±2.041         |
 
 
 

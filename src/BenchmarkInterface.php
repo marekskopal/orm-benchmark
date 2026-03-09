@@ -12,6 +12,10 @@ interface BenchmarkInterface
 
     public function selectAllRows(): float;
 
+    public function updateOneRow(): float;
+
+    public function updateOneRowThousandTimes(): float;
+
     public function insertOneRow(): float;
 
     public function insertOneRowThousandTimes(): float;

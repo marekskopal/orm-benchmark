@@ -33,7 +33,7 @@ class DoctrineOrmBenchmark implements BenchmarkInterface
             'path' => __DIR__ . '/../../database.sqlite',
         ]);
 
-        // Warm up metadata cache so first benchmark method does not pay for attribute parsing
+        // Warm up metadata cache so the first benchmark does not pay for attribute parsing
         $em = $this->createEntityManager();
         $em->getClassMetadata(User::class);
         $em->getClassMetadata(Address::class);
@@ -76,6 +76,32 @@ class DoctrineOrmBenchmark implements BenchmarkInterface
             $users = $em->getRepository(User::class)->findAll();
             foreach ($users as $user) {
                 $city = $user->address->city;
+            }
+        });
+    }
+
+    public function updateOneRow(): float
+    {
+        $em = $this->createEntityManager();
+        $user = $em->find(User::class, 1);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($em, $user): void {
+            $user->firstName = 'Updated';
+            $em->flush();
+        });
+    }
+
+    public function updateOneRowThousandTimes(): float
+    {
+        $em = $this->createEntityManager();
+        $user = $em->find(User::class, 1);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($em, $user): void {
+            for ($i = 0; $i < 1000; $i++) {
+                $user->firstName = 'Updated' . $i;
+                $em->flush();
             }
         });
     }
@@ -143,9 +169,9 @@ class DoctrineOrmBenchmark implements BenchmarkInterface
                 $user->address = $address;
 
                 $em->persist($user);
-                $em->flush();
-                $em->detach($user);
             }
+
+            $em->flush();
         });
     }
 }

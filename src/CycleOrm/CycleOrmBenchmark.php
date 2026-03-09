@@ -89,7 +89,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
             new GenerateTypecast(),
         ]);
 
-        // Warm up the DBAL connection so first benchmark method does not pay for connection establishment
+        // Warm up the DBAL connection so the first benchmark does not pay for connection establishment
         $this->dbal->database()->query('SELECT 1');
     }
 
@@ -131,6 +131,40 @@ class CycleOrmBenchmark implements BenchmarkInterface
         return BenchmarkTime::measure(function () use ($userRepository): void {
             foreach ($userRepository->findAll() as $user) {
                 $address = $user->address->city;
+            }
+        });
+    }
+
+    public function updateOneRow(): float
+    {
+        $orm = $this->createOrm();
+        $userRepository = $orm->getRepository(User::class);
+        $manager = new EntityManager($orm);
+
+        $user = $userRepository->findOne(['id' => 1]);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($manager, $user): void {
+            $user->firstName = 'Updated';
+            $manager->persist($user);
+            $manager->run();
+        });
+    }
+
+    public function updateOneRowThousandTimes(): float
+    {
+        $orm = $this->createOrm();
+        $userRepository = $orm->getRepository(User::class);
+        $manager = new EntityManager($orm);
+
+        $user = $userRepository->findOne(['id' => 1]);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($manager, $user): void {
+            for ($i = 0; $i < 1000; $i++) {
+                $user->firstName = 'Updated' . $i;
+                $manager->persist($user);
+                $manager->run();
             }
         });
     }
@@ -198,7 +232,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($manager, $address): void {
             for ($i = 0; $i < 1000; $i++) {
-                $user = new User(
+                $manager->persist(new User(
                     createdAt: new DateTimeImmutable(),
                     firstName: 'John' . $i,
                     middleName: 'Doe' . $i,
@@ -206,11 +240,10 @@ class CycleOrmBenchmark implements BenchmarkInterface
                     email: 'john.dow@example.com' . $i,
                     isActive: true,
                     address: $address,
-                );
-
-                $manager->persist($user);
-                $manager->run();
+                ));
             }
+
+            $manager->run();
         });
     }
 }

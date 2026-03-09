@@ -68,6 +68,32 @@ class PropelBenchmark implements BenchmarkInterface
         });
     }
 
+    public function updateOneRow(): float
+    {
+        /** @var User|null $user */
+        $user = UserQuery::create()->findPk(1);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($user): void {
+            $user->setFirstName('Updated');
+            $user->save();
+        });
+    }
+
+    public function updateOneRowThousandTimes(): float
+    {
+        /** @var User|null $user */
+        $user = UserQuery::create()->findPk(1);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($user): void {
+            for ($i = 0; $i < 1000; $i++) {
+                $user->setFirstName('Updated' . $i);
+                $user->save();
+            }
+        });
+    }
+
     public function insertOneRow(): float
     {
         /** @var \MarekSkopal\ORMBenchmark\Propel\generated\Address|null $address */
@@ -112,6 +138,9 @@ class PropelBenchmark implements BenchmarkInterface
         $address = AddressQuery::create()->findPk(1);
 
         return BenchmarkTime::measure(function () use ($address): void {
+            $con = Propel::getConnection();
+            $con->beginTransaction();
+
             for ($i = 0; $i < 1000; $i++) {
                 $user = new User();
                 $user->setCreatedAt(date('Y-m-d H:i:s'));
@@ -121,8 +150,10 @@ class PropelBenchmark implements BenchmarkInterface
                 $user->setEmail('john.dow@example.com' . $i);
                 $user->setIsActive(1);
                 $user->setAddress($address);
-                $user->save();
+                $user->save($con);
             }
+
+            $con->commit();
         });
     }
 }

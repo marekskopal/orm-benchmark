@@ -60,6 +60,36 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
         });
     }
 
+    public function updateOneRow(): float
+    {
+        $orm = new ORM($this->database, $this->schema);
+        $userRepository = $orm->getRepository(User::class);
+
+        $user = $userRepository->findOne(['id' => 1]);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($userRepository, $user): void {
+            $user->firstName = 'Updated';
+            $userRepository->persist($user);
+        });
+    }
+
+    public function updateOneRowThousandTimes(): float
+    {
+        $orm = new ORM($this->database, $this->schema);
+        $userRepository = $orm->getRepository(User::class);
+
+        $user = $userRepository->findOne(['id' => 1]);
+        assert($user instanceof User);
+
+        return BenchmarkTime::measure(function () use ($userRepository, $user): void {
+            for ($i = 0; $i < 1000; $i++) {
+                $user->firstName = 'Updated' . $i;
+                $userRepository->persist($user);
+            }
+        });
+    }
+
     public function insertOneRow(): float
     {
         $orm = new ORM($this->database, $this->schema);
@@ -114,25 +144,25 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
     {
         $orm = new ORM($this->database, $this->schema);
         $addressRepository = $orm->getRepository(Address::class);
-        $userRepository = $orm->getRepository(User::class);
 
         $address = $addressRepository->findOne(['id' => 1]);
         assert($address instanceof Address);
 
-        return BenchmarkTime::measure(function () use ($userRepository, $address): void {
-            for ($i = 0; $i < 1000; $i++) {
-                $user = new User(
-                    createdAt: new DateTimeImmutable(),
-                    firstName: 'John' . $i,
-                    middleName: 'Doe' . $i,
-                    lastName: 'Smith' . $i,
-                    email: 'john.dow@example.com' . $i,
-                    isActive: true,
-                    address: $address,
-                );
-
-                $userRepository->persist($user);
-            }
+        return BenchmarkTime::measure(function () use ($orm, $address): void {
+            $orm->getTransactionProvider()->transaction(function () use ($orm, $address): void {
+                $userRepository = $orm->getRepository(User::class);
+                for ($i = 0; $i < 1000; $i++) {
+                    $userRepository->persist(new User(
+                        createdAt: new DateTimeImmutable(),
+                        firstName: 'John' . $i,
+                        middleName: 'Doe' . $i,
+                        lastName: 'Smith' . $i,
+                        email: 'john.dow@example.com' . $i,
+                        isActive: true,
+                        address: $address,
+                    ));
+                }
+            });
         });
     }
 }
