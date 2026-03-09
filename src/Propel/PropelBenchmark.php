@@ -18,10 +18,25 @@ use Propel\Runtime\ServiceContainer\StandardServiceContainer;
 
 class PropelBenchmark implements BenchmarkInterface
 {
+    public function __construct()
+    {
+        $serviceContainer = Propel::getServiceContainer();
+        assert($serviceContainer instanceof StandardServiceContainer);
+        $serviceContainer->setAdapterClass('default', SqliteAdapter::class);
+        $manager = new ConnectionManagerSingle('default');
+        $manager->setConfiguration([
+            'dsn' => 'sqlite:' . __DIR__ . '/../../database.sqlite',
+            'user' => '',
+            'password' => '',
+        ]);
+        $serviceContainer->setConnectionManager($manager);
+        $serviceContainer->initDatabaseMaps([
+            'default' => [AddressTableMap::class, UserTableMap::class],
+        ]);
+    }
+
     public function selectOneRow(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             /** @var User|null $user */
             $user = UserQuery::create()->findPk(1);
@@ -31,10 +46,10 @@ class PropelBenchmark implements BenchmarkInterface
 
     public function selectOneRowThousandTimes(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
+                UserTableMap::clearInstancePool();
+                AddressTableMap::clearInstancePool();
                 /** @var User|null $user */
                 $user = UserQuery::create()->findPk(1);
                 $city = $user?->getAddress()?->getCity();
@@ -44,8 +59,6 @@ class PropelBenchmark implements BenchmarkInterface
 
     public function selectAllRows(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             /** @var iterable<User> $users */
             $users = UserQuery::create()->find();
@@ -57,7 +70,6 @@ class PropelBenchmark implements BenchmarkInterface
 
     public function insertOneRow(): float
     {
-        $this->init();
         /** @var \MarekSkopal\ORMBenchmark\Propel\generated\Address|null $address */
         $address = AddressQuery::create()->findPk(1);
 
@@ -76,7 +88,6 @@ class PropelBenchmark implements BenchmarkInterface
 
     public function insertOneRowThousandTimes(): float
     {
-        $this->init();
         /** @var \MarekSkopal\ORMBenchmark\Propel\generated\Address|null $address */
         $address = AddressQuery::create()->findPk(1);
 
@@ -97,7 +108,6 @@ class PropelBenchmark implements BenchmarkInterface
 
     public function insertOneThousandRows(): float
     {
-        $this->init();
         /** @var \MarekSkopal\ORMBenchmark\Propel\generated\Address|null $address */
         $address = AddressQuery::create()->findPk(1);
 
@@ -114,22 +124,5 @@ class PropelBenchmark implements BenchmarkInterface
                 $user->save();
             }
         });
-    }
-
-    private function init(): void
-    {
-        $serviceContainer = Propel::getServiceContainer();
-        assert($serviceContainer instanceof StandardServiceContainer);
-        $serviceContainer->setAdapterClass('default', SqliteAdapter::class);
-        $manager = new ConnectionManagerSingle('default');
-        $manager->setConfiguration([
-            'dsn' => 'sqlite:' . __DIR__ . '/../../database.sqlite',
-            'user' => '',
-            'password' => '',
-        ]);
-        $serviceContainer->setConnectionManager($manager);
-        $serviceContainer->initDatabaseMaps([
-            'default' => [AddressTableMap::class, UserTableMap::class],
-        ]);
     }
 }

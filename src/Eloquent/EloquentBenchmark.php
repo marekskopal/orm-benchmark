@@ -6,16 +6,24 @@ namespace MarekSkopal\ORMBenchmark\Eloquent;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use MarekSkopal\ORMBenchmark\BenchmarkInterface;
-use MarekSkopal\ORMBenchmark\Eloquent\Model\Address;
 use MarekSkopal\ORMBenchmark\Eloquent\Model\User;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
 
 class EloquentBenchmark implements BenchmarkInterface
 {
+    public function __construct()
+    {
+        $capsule = new Capsule();
+        $capsule->addConnection([
+            'driver' => 'sqlite',
+            'database' => __DIR__ . '/../../database.sqlite',
+        ]);
+        $capsule->setAsGlobal();
+        $capsule->bootEloquent();
+    }
+
     public function selectOneRow(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             $user = User::with('address')->find(1);
             $city = $user?->address?->city;
@@ -24,8 +32,6 @@ class EloquentBenchmark implements BenchmarkInterface
 
     public function selectOneRowThousandTimes(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = User::with('address')->find(1);
@@ -36,8 +42,6 @@ class EloquentBenchmark implements BenchmarkInterface
 
     public function selectAllRows(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             $users = User::with('address')->get();
             foreach ($users as $user) {
@@ -48,8 +52,6 @@ class EloquentBenchmark implements BenchmarkInterface
 
     public function insertOneRow(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             $user = new User([
                 'created_at' => date('Y-m-d H:i:s'),
@@ -66,8 +68,6 @@ class EloquentBenchmark implements BenchmarkInterface
 
     public function insertOneRowThousandTimes(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = new User([
@@ -86,8 +86,6 @@ class EloquentBenchmark implements BenchmarkInterface
 
     public function insertOneThousandRows(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = new User([
@@ -102,16 +100,5 @@ class EloquentBenchmark implements BenchmarkInterface
                 $user->save();
             }
         });
-    }
-
-    private function init(): void
-    {
-        $capsule = new Capsule();
-        $capsule->addConnection([
-            'driver' => 'sqlite',
-            'database' => __DIR__ . '/../../database.sqlite',
-        ]);
-        $capsule->setAsGlobal();
-        $capsule->bootEloquent();
     }
 }

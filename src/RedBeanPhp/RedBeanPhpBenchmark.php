@@ -10,10 +10,14 @@ use RedBeanPHP\Facade as R;
 
 class RedBeanPhpBenchmark implements BenchmarkInterface
 {
+    public function __construct()
+    {
+        R::setup('sqlite:' . __DIR__ . '/../../database.sqlite');
+        R::freeze(true);
+    }
+
     public function selectOneRow(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             $user = R::load('users', 1);
             $address = R::load('addresses', (int) $user->address_id);
@@ -23,8 +27,6 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
 
     public function selectOneRowThousandTimes(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = R::load('users', 1);
@@ -36,8 +38,6 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
 
     public function selectAllRows(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             $users = R::findAll('users');
             foreach ($users as $user) {
@@ -49,8 +49,6 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
 
     public function insertOneRow(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             $user = R::dispense('users');
             $user->created_at = date('Y-m-d H:i:s');
@@ -66,8 +64,6 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
 
     public function insertOneRowThousandTimes(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = R::dispense('users');
@@ -85,8 +81,6 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
 
     public function insertOneThousandRows(): float
     {
-        $this->init();
-
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = R::dispense('users');
@@ -100,16 +94,5 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
                 R::store($user);
             }
         });
-    }
-
-    private static bool $initialized = false;
-
-    private function init(): void
-    {
-        if (!self::$initialized) {
-            R::setup('sqlite:' . __DIR__ . '/../../database.sqlite');
-            R::freeze(true);
-            self::$initialized = true;
-        }
     }
 }

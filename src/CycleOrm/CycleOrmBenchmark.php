@@ -41,10 +41,66 @@ use Spiral\Tokenizer\Tokenizer;
 class CycleOrmBenchmark implements BenchmarkInterface
 {
     private DatabaseManager $dbal;
+    /** @var array<mixed> */
+    private array $compiledSchema;
+
+    public function __construct()
+    {
+        $this->dbal = new DatabaseManager(
+            new DatabaseConfig([
+                'default' => 'default',
+                'databases' => [
+                    'default' => [
+                        'connection' => 'sqlite',
+                    ],
+                ],
+                'connections' => [
+                    'sqlite' => new SQLiteDriverConfig(
+                        connection: new FileConnectionConfig(
+                            __DIR__ . '/../../database.sqlite',
+                        ),
+                    ),
+                ],
+            ]),
+        );
+
+        $registry = new Registry($this->dbal);
+
+        $classLocator = (new Tokenizer(new TokenizerConfig([
+            'directories' => [
+                __DIR__ . '/Entity',
+            ],
+        ])))->classLocator();
+
+        $this->compiledSchema = (new Compiler())->compile($registry, [
+            new ResetTables(),
+            new Embeddings(new TokenizerEmbeddingLocator($classLocator)),
+            new Entities(new TokenizerEntityLocator($classLocator)),
+            new TableInheritance(),
+            new MergeColumns(),
+            new GenerateRelations(),
+            new GenerateModifiers(),
+            new ValidateEntities(),
+            new RenderTables(),
+            new RenderRelations(),
+            new RenderModifiers(),
+            new ForeignKeys(),
+            new MergeIndexes(),
+            new GenerateTypecast(),
+        ]);
+
+        // Warm up the DBAL connection so first benchmark method does not pay for connection establishment
+        $this->dbal->database()->query('SELECT 1');
+    }
+
+    private function createOrm(): ORM
+    {
+        return new ORM(new Factory($this->dbal), new Schema($this->compiledSchema));
+    }
 
     public function selectOneRow(): float
     {
-        $orm = $this->init();
+        $orm = $this->createOrm();
         $userRepository = $orm->getRepository(User::class);
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
@@ -55,11 +111,12 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
     public function selectOneRowThousandTimes(): float
     {
-        $orm = $this->init();
+        $orm = $this->createOrm();
         $userRepository = $orm->getRepository(User::class);
 
-        return BenchmarkTime::measure(function () use ($userRepository): void {
+        return BenchmarkTime::measure(function () use ($orm, $userRepository): void {
             for ($i = 0; $i < 1000; $i++) {
+                $orm->getHeap()->clean();
                 $user = $userRepository->findOne(['id' => 1]);
                 $address = $user?->address->city;
             }
@@ -68,7 +125,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
     public function selectAllRows(): float
     {
-        $orm = $this->init();
+        $orm = $this->createOrm();
         $userRepository = $orm->getRepository(User::class);
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
@@ -80,9 +137,8 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
     public function insertOneRow(): float
     {
-        $orm = $this->init();
+        $orm = $this->createOrm();
         $addressRepository = $orm->getRepository(Address::class);
-
         $manager = new EntityManager($orm);
 
         $address = $addressRepository->findOne(['id' => 1]);
@@ -106,9 +162,8 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
     public function insertOneRowThousandTimes(): float
     {
-        $orm = $this->init();
+        $orm = $this->createOrm();
         $addressRepository = $orm->getRepository(Address::class);
-
         $manager = new EntityManager($orm);
 
         $address = $addressRepository->findOne(['id' => 1]);
@@ -134,9 +189,8 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
     public function insertOneThousandRows(): float
     {
-        $orm = $this->init();
+        $orm = $this->createOrm();
         $addressRepository = $orm->getRepository(Address::class);
-
         $manager = new EntityManager($orm);
 
         $address = $addressRepository->findOne(['id' => 1]);
@@ -158,69 +212,5 @@ class CycleOrmBenchmark implements BenchmarkInterface
                 $manager->run();
             }
         });
-    }
-
-    private function init(): ORM
-    {
-        if (!isset($this->dbal)) {
-            $this->dbal = new DatabaseManager(
-                new DatabaseConfig([
-                    'default' => 'default',
-                    'databases' => [
-                        'default' => [
-                            'connection' => 'sqlite',
-                        ],
-                    ],
-                    'connections' => [
-                        'sqlite' => new SQLiteDriverConfig(
-                            connection: new FileConnectionConfig(
-                                __DIR__ . '/../../database.sqlite',
-                            ),
-                        ),
-                    ],
-                ]),
-            );
-        }
-
-        $registry = new Registry($this->dbal);
-
-        $classLocator = (new Tokenizer(new TokenizerConfig([
-            'directories' => [
-                __DIR__ . '/Entity',
-            ],
-        ])))->classLocator();
-
-        $schema = (new Compiler())->compile($registry, [
-            // Reconfigure table schemas (deletes columns if necessary)
-            new ResetTables(),
-            // Recognize embeddable entities
-            new Embeddings(new TokenizerEmbeddingLocator($classLocator)),
-            // Identify attributed entities
-            new Entities(new TokenizerEntityLocator($classLocator)),
-            // Setup Single Table or Joined Table Inheritance
-            new TableInheritance(),
-            // Integrate table #[Column] attributes
-            new MergeColumns(),
-            // Define entity relationships
-            new GenerateRelations(),
-            // Apply schema modifications
-            new GenerateModifiers(),
-            // Ensure entity schemas adhere to conventions
-            new ValidateEntities(),
-            // Create table schemas
-            new RenderTables(),
-            // Establish keys and indexes for relationships
-            new RenderRelations(),
-            // Implement schema modifications
-            new RenderModifiers(),
-            // Define foreign key constraints
-            new ForeignKeys(),
-            // Merge table index attributes
-            new MergeIndexes(),
-            // Typecast non-string columns
-            new GenerateTypecast(),
-        ]);
-
-        return new ORM(new Factory($this->dbal), new Schema($schema));
     }
 }

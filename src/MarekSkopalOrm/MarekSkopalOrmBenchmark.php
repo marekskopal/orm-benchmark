@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use MarekSkopal\ORM\Database\SqliteDatabase;
 use MarekSkopal\ORM\ORM;
 use MarekSkopal\ORM\Schema\Builder\SchemaBuilder;
+use MarekSkopal\ORM\Schema\Schema;
 use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\Address;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\User;
@@ -15,10 +16,20 @@ use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
 
 final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 {
+    private SqliteDatabase $database;
+    private Schema $schema;
+
+    public function __construct()
+    {
+        $this->database = new SqliteDatabase(__DIR__ . '/../../database.sqlite');
+        $this->schema = (new SchemaBuilder())
+            ->addEntityPath(__DIR__ . '/Entity')
+            ->build();
+    }
+
     public function selectOneRow(): float
     {
-        $orm = $this->init();
-        $userRepository = $orm->getRepository(User::class);
+        $userRepository = (new ORM($this->database, $this->schema))->getRepository(User::class);
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             $user = $userRepository->findOne(['id' => 1]);
@@ -28,8 +39,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
     public function selectOneRowThousandTimes(): float
     {
-        $orm = $this->init();
-        $userRepository = $orm->getRepository(User::class);
+        $userRepository = (new ORM($this->database, $this->schema))->getRepository(User::class);
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             for ($i = 0; $i < 1000; $i++) {
@@ -41,8 +51,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
     public function selectAllRows(): float
     {
-        $orm = $this->init();
-        $userRepository = $orm->getRepository(User::class);
+        $userRepository = (new ORM($this->database, $this->schema))->getRepository(User::class);
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             foreach (iterator_to_array($userRepository->findAll()) as $user) {
@@ -53,7 +62,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
     public function insertOneRow(): float
     {
-        $orm = $this->init();
+        $orm = new ORM($this->database, $this->schema);
         $addressRepository = $orm->getRepository(Address::class);
         $userRepository = $orm->getRepository(User::class);
 
@@ -77,7 +86,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
     public function insertOneRowThousandTimes(): float
     {
-        $orm = $this->init();
+        $orm = new ORM($this->database, $this->schema);
         $addressRepository = $orm->getRepository(Address::class);
         $userRepository = $orm->getRepository(User::class);
 
@@ -103,7 +112,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
     public function insertOneThousandRows(): float
     {
-        $orm = $this->init();
+        $orm = new ORM($this->database, $this->schema);
         $addressRepository = $orm->getRepository(Address::class);
         $userRepository = $orm->getRepository(User::class);
 
@@ -125,16 +134,5 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
                 $userRepository->persist($user);
             }
         });
-    }
-
-    private function init(): ORM
-    {
-        $database = new SqliteDatabase(__DIR__ . '/../../database.sqlite');
-
-        $schema = new SchemaBuilder()
-            ->addEntityPath(__DIR__ . '/Entity')
-            ->build();
-
-        return new ORM($database, $schema);
     }
 }
