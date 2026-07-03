@@ -9,6 +9,7 @@ use Illuminate\Database\Connection;
 use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\Eloquent\Model\User;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
+use MarekSkopal\ORMBenchmark\Utils\Blackhole;
 
 class EloquentBenchmark implements BenchmarkInterface
 {
@@ -31,7 +32,7 @@ class EloquentBenchmark implements BenchmarkInterface
     {
         return BenchmarkTime::measure(function (): void {
             $user = User::with('address')->find(1);
-            $city = $user?->address?->city;
+            Blackhole::consume($user?->address?->city);
         });
     }
 
@@ -40,7 +41,7 @@ class EloquentBenchmark implements BenchmarkInterface
         return BenchmarkTime::measure(function (): void {
             for ($i = 0; $i < 1000; $i++) {
                 $user = User::with('address')->find(1);
-                $city = $user?->address?->city;
+                Blackhole::consume($user?->address?->city);
             }
         });
     }
@@ -50,7 +51,7 @@ class EloquentBenchmark implements BenchmarkInterface
         return BenchmarkTime::measure(function (): void {
             $users = User::with('address')->get();
             foreach ($users as $user) {
-                $city = $user->address?->city;
+                Blackhole::consume($user->address?->city);
             }
         });
     }

@@ -35,13 +35,18 @@ use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\CycleOrm\Entity\Address;
 use MarekSkopal\ORMBenchmark\CycleOrm\Entity\User;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
+use MarekSkopal\ORMBenchmark\Utils\Blackhole;
 use Spiral\Tokenizer\Config\TokenizerConfig;
 use Spiral\Tokenizer\Tokenizer;
 
 class CycleOrmBenchmark implements BenchmarkInterface
 {
     private DatabaseManager $dbal;
-    /** @var array<mixed> */
+
+    /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.DisallowMixedTypeHint
+     * @var array<mixed>
+     */
     private array $compiledSchema;
 
     public function __construct()
@@ -109,7 +114,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             $user = $userRepository->findOne(['id' => 1]);
-            $address = $user?->address->city;
+            Blackhole::consume($user?->address->city);
         });
     }
 
@@ -122,7 +127,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
             for ($i = 0; $i < 1000; $i++) {
                 $orm->getHeap()->clean();
                 $user = $userRepository->findOne(['id' => 1]);
-                $address = $user?->address->city;
+                Blackhole::consume($user?->address->city);
             }
         });
     }
@@ -134,7 +139,7 @@ class CycleOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             foreach ($userRepository->findAll() as $user) {
-                $address = $user->address->city;
+                Blackhole::consume($user->address->city);
             }
         });
     }

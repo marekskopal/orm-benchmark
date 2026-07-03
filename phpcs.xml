@@ -3,5 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/squizlabs/php_codesniffer/phpcs.xsd">
     <file>src/</file>
+    <exclude-pattern>src/Propel/generated/*</exclude-pattern>
     <rule ref="ruleset.xml"/>
 </ruleset>

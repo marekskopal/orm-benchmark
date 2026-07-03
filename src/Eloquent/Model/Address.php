@@ -14,7 +14,15 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Address extends Model
 {
+    /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
+     * @var string|null
+     */
     protected $table = 'addresses';
 
+    /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
+     * @var bool
+     */
     public $timestamps = false;
 }

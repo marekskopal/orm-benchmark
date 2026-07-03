@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace MarekSkopal\ORMBenchmark\DoctrineOrm\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\Table;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'addresses')]
+#[Entity]
+#[Table(name: 'addresses')]
 class Address
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'integer')]
-    #[ORM\GeneratedValue]
+    #[Id]
+    #[Column(type: 'integer')]
+    #[GeneratedValue]
     public int $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[Column(type: 'string', length: 255)]
     public string $street;
 
-    #[ORM\Column(type: 'integer')]
+    #[Column(type: 'integer')]
     public int $number;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[Column(type: 'string', length: 255)]
     public string $city;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[Column(type: 'string', length: 255)]
     public string $country;
 }

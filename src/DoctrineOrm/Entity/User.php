@@ -5,36 +5,42 @@ declare(strict_types=1);
 namespace MarekSkopal\ORMBenchmark\DoctrineOrm\Entity;
 
 use DateTimeImmutable;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\JoinColumn;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Table;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'users')]
+#[Entity]
+#[Table(name: 'users')]
 class User
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'integer')]
-    #[ORM\GeneratedValue]
+    #[Id]
+    #[Column(type: 'integer')]
+    #[GeneratedValue]
     public int $id;
 
-    #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
+    #[Column(name: 'created_at', type: 'datetime_immutable')]
     public DateTimeImmutable $createdAt;
 
-    #[ORM\Column(name: 'first_name', type: 'string', length: 255)]
+    #[Column(name: 'first_name', type: 'string', length: 255)]
     public string $firstName;
 
-    #[ORM\Column(name: 'middle_name', type: 'string', length: 255, nullable: true)]
+    #[Column(name: 'middle_name', type: 'string', length: 255, nullable: true)]
     public ?string $middleName;
 
-    #[ORM\Column(name: 'last_name', type: 'string', length: 255)]
+    #[Column(name: 'last_name', type: 'string', length: 255)]
     public string $lastName;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[Column(type: 'string', length: 255)]
     public string $email;
 
-    #[ORM\Column(name: 'is_active', type: 'boolean')]
+    #[Column(name: 'is_active', type: 'boolean')]
     public bool $isActive;
 
-    #[ORM\ManyToOne(targetEntity: Address::class)]
-    #[ORM\JoinColumn(name: 'address_id', referencedColumnName: 'id')]
+    #[ManyToOne(targetEntity: Address::class)]
+    #[JoinColumn(name: 'address_id', referencedColumnName: 'id')]
     public Address $address;
 }

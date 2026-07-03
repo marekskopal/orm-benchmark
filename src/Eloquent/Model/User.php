@@ -7,15 +7,25 @@ namespace MarekSkopal\ORMBenchmark\Eloquent\Model;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @property-read Address|null $address
- */
+/** @property-read Address|null $address */
 class User extends Model
 {
+    /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
+     * @var string|null
+     */
     protected $table = 'users';
 
+    /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
+     * @var bool
+     */
     public $timestamps = false;
 
+    /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
+     * @var array<int, string>
+     */
     protected $fillable = [
         'created_at',
         'first_name',

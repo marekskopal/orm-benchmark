@@ -6,6 +6,7 @@ namespace MarekSkopal\ORMBenchmark\RedBeanPhp;
 
 use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
+use MarekSkopal\ORMBenchmark\Utils\Blackhole;
 use RedBeanPHP\Facade as R;
 
 class RedBeanPhpBenchmark implements BenchmarkInterface
@@ -21,7 +22,7 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
         return BenchmarkTime::measure(function (): void {
             $user = R::load('users', 1);
             $address = R::load('addresses', (int) $user->address_id);
-            $city = $address->city;
+            Blackhole::consume($address->city);
         });
     }
 
@@ -31,7 +32,7 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
             for ($i = 0; $i < 1000; $i++) {
                 $user = R::load('users', 1);
                 $address = R::load('addresses', (int) $user->address_id);
-                $city = $address->city;
+                Blackhole::consume($address->city);
             }
         });
     }
@@ -42,7 +43,7 @@ class RedBeanPhpBenchmark implements BenchmarkInterface
             $users = R::findAll('users');
             foreach ($users as $user) {
                 $address = R::load('addresses', (int) $user->address_id);
-                $city = $address->city;
+                Blackhole::consume($address->city);
             }
         });
     }

@@ -13,10 +13,12 @@ use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\Address;
 use MarekSkopal\ORMBenchmark\MarekSkopalOrm\Entity\User;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
+use MarekSkopal\ORMBenchmark\Utils\Blackhole;
 
 final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 {
     private SqliteDatabase $database;
+
     private Schema $schema;
 
     public function __construct()
@@ -33,7 +35,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             $user = $userRepository->findOne(['id' => 1]);
-            $address = $user?->address->city;
+            Blackhole::consume($user?->address->city);
         });
     }
 
@@ -46,7 +48,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
             for ($i = 0; $i < 1000; $i++) {
                 $orm->getEntityCache()->clear();
                 $user = $userRepository->findOne(['id' => 1]);
-                $address = $user?->address->city;
+                Blackhole::consume($user?->address->city);
             }
         });
     }
@@ -57,7 +59,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
             foreach (iterator_to_array($userRepository->findAll()) as $user) {
-                $address = $user->address->city;
+                Blackhole::consume($user->address->city);
             }
         });
     }

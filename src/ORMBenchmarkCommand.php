@@ -19,6 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use const E_ALL;
 use const E_DEPRECATED;
+use const PHP_VERSION;
 
 final class ORMBenchmarkCommand extends Command
 {
@@ -179,7 +180,7 @@ final class ORMBenchmarkCommand extends Command
     private function printEnvironment(OutputInterface $output): void
     {
         $opcache = function_exists('opcache_get_status')
-            ? ((opcache_get_status(false)['opcache_enabled'] ?? false) ? 'enabled' : 'disabled')
+            ? (opcache_get_status(false)['opcache_enabled'] ?? false ? 'enabled' : 'disabled')
             : 'n/a';
 
         $cpu = trim((string) shell_exec('sysctl -n machdep.cpu.brand_string 2>/dev/null'));

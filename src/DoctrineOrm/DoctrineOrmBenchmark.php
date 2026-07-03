@@ -14,10 +14,12 @@ use MarekSkopal\ORMBenchmark\BenchmarkInterface;
 use MarekSkopal\ORMBenchmark\DoctrineOrm\Entity\Address;
 use MarekSkopal\ORMBenchmark\DoctrineOrm\Entity\User;
 use MarekSkopal\ORMBenchmark\Utils\BenchmarkTime;
+use MarekSkopal\ORMBenchmark\Utils\Blackhole;
 
 class DoctrineOrmBenchmark implements BenchmarkInterface
 {
     private Configuration $config;
+
     private Connection $connection;
 
     public function __construct()
@@ -50,7 +52,7 @@ class DoctrineOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($em): void {
             $user = $em->find(User::class, 1);
-            $city = $user?->address->city;
+            Blackhole::consume($user?->address->city);
         });
     }
 
@@ -62,7 +64,7 @@ class DoctrineOrmBenchmark implements BenchmarkInterface
             for ($i = 0; $i < 1000; $i++) {
                 $em->clear();
                 $user = $em->find(User::class, 1);
-                $city = $user?->address->city;
+                Blackhole::consume($user?->address->city);
             }
         });
     }
@@ -75,7 +77,7 @@ class DoctrineOrmBenchmark implements BenchmarkInterface
             /** @var list<User> $users */
             $users = $em->getRepository(User::class)->findAll();
             foreach ($users as $user) {
-                $city = $user->address->city;
+                Blackhole::consume($user->address->city);
             }
         });
     }
