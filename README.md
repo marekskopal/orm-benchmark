@@ -55,7 +55,7 @@ Each method is run **5 times** and results are reported as **median ± standard 
 
 ### Database
 
-SQLite file database seeded with the configured number of user rows (default 100,000) and one shared address row. The schema is recreated from scratch before each run. Seeding runs inside a single transaction.
+SQLite file database seeded with the configured number of user rows (default 100,000) and one shared address row. The schema is recreated from scratch before each run. Seeding runs inside a single transaction. Before every run the users table is reset back to the seeded row count, so every ORM and every run operates on a table of identical size regardless of rows inserted by previous benchmarks.
 
 ### Timing
 
@@ -63,40 +63,40 @@ PHP `hrtime()` is used for nanosecond-precision wall-clock measurement. Results 
 
 ## Results
 
-Environment: PHP 8.5.3, OPcache disabled, Apple M1 Max, macOS, 100,000 pre-seeded rows, 5 runs per method. All times in milliseconds (median ±stddev).
+Environment: PHP 8.5.7, OPcache disabled, Apple M1 Max, macOS, 100,000 pre-seeded rows, 5 runs per method. All times in milliseconds (median ±stddev).
 
 Select:
 
 | ORM            | Version    | selectOneRow  | selectOneRowThousandTimes | selectAllRows      |
 | -------------- | ---------- | ------------: | ------------------------: | -----------------: |
-| MarekSkopalORM | v1.0.1     | 0.148 ±0.680  | 17.896 ±1.097             | 898.878 ±31.232    |
-| CycleORM       | v2.14.3    | 0.442 ±4.589  | 72.620 ±2.006             | 2046.867 ±61.092   |
-| DoctrineORM    | 3.6.2      | 0.357 ±5.091  | 80.458 ±3.187             | 1768.364 ±42.275   |
-| Eloquent       | v12.53.0   | 0.382 ±5.420  | 150.493 ±6.697            | 1731.280 ±94.030   |
-| Propel         | dev-master | 0.024 ±4.467  | 54.494 ±9.662             | 1303.625 ±83.378   |
-| RedBeanPHP     | v5.7.5     | 0.238 ±0.516  | 12.324 ±1.024             | 2185.548 ±70.746   |
+| MarekSkopalORM | v1.3.0     | 0.346 ±0.992  | 58.883 ±10.636            | 1027.897 ±100.449  |
+| CycleORM       | v2.18.0    | 0.631 ±4.247  | 97.103 ±5.248             | 1938.415 ±38.460   |
+| DoctrineORM    | 3.6.7      | 0.500 ±5.520  | 89.040 ±2.116             | 1448.280 ±52.213   |
+| Eloquent       | v13.18.1   | 0.655 ±5.560  | 205.971 ±15.053           | 1855.522 ±34.876   |
+| Propel         | dev-master | 0.025 ±3.950  | 50.962 ±6.762             | 923.468 ±14.563    |
+| RedBeanPHP     | v5.7.6     | 0.254 ±0.448  | 12.042 ±0.209             | 1351.546 ±26.963   |
 
 Update:
 
 | ORM            | Version    | updateOneRow  | updateOneRowThousandTimes |
 | -------------- | ---------- | ------------: | ------------------------: |
-| MarekSkopalORM | v1.0.1     | 1.012 ±0.284  | 344.804 ±59.430           |
-| CycleORM       | v2.14.3    | 1.244 ±1.063  | 380.753 ±9.827            |
-| DoctrineORM    | 3.6.2      | 0.778 ±0.117  | 346.972 ±24.206           |
-| Eloquent       | v12.53.0   | 0.915 ±0.848  | 445.381 ±86.441           |
-| Propel         | dev-master | 0.887 ±0.977  | 353.564 ±22.276           |
-| RedBeanPHP     | v5.7.5     | 0.915 ±0.077  | 387.193 ±50.980           |
+| MarekSkopalORM | v1.3.0     | 0.782 ±0.343  | 507.631 ±49.095           |
+| CycleORM       | v2.18.0    | 1.403 ±1.931  | 574.515 ±50.855           |
+| DoctrineORM    | 3.6.7      | 1.118 ±0.208  | 443.035 ±31.362           |
+| Eloquent       | v13.18.1   | 1.442 ±0.709  | 514.913 ±21.826           |
+| Propel         | dev-master | 1.339 ±1.010  | 409.055 ±72.537           |
+| RedBeanPHP     | v5.7.6     | 1.213 ±0.190  | 377.317 ±30.354           |
 
 Insert:
 
 | ORM            | Version    | insertOneRow  | insertOneRowThousandTimes | insertOneThousandRows |
 | -------------- | ---------- | ------------: | ------------------------: | --------------------: |
-| MarekSkopalORM | v1.0.1     | 0.498 ±0.156  | 467.341 ±52.176           | 12.928 ±0.272         |
-| CycleORM       | v2.14.3    | 0.558 ±0.534  | 476.735 ±71.822           | 48.111 ±0.230         |
-| DoctrineORM    | 3.6.2      | 0.644 ±0.903  | 483.060 ±40.132           | 45.615 ±1.698         |
-| Eloquent       | v12.53.0   | 0.533 ±0.045  | 459.674 ±87.618           | 78.020 ±5.859         |
-| Propel         | dev-master | 0.435 ±0.030  | 416.375 ±56.386           | 18.498 ±0.390         |
-| RedBeanPHP     | v5.7.5     | 0.494 ±0.764  | 524.459 ±72.586           | 36.314 ±2.041         |
+| MarekSkopalORM | v1.3.0     | 0.794 ±0.244  | 608.833 ±71.560           | 19.485 ±0.322         |
+| CycleORM       | v2.18.0    | 0.875 ±0.318  | 565.768 ±47.305           | 51.106 ±1.409         |
+| DoctrineORM    | 3.6.7      | 0.712 ±0.740  | 513.149 ±24.138           | 47.581 ±24.689        |
+| Eloquent       | v13.18.1   | 0.567 ±0.052  | 550.818 ±36.195           | 92.956 ±3.822         |
+| Propel         | dev-master | 0.443 ±0.028  | 405.589 ±35.257           | 20.006 ±1.546         |
+| RedBeanPHP     | v5.7.6     | 0.603 ±0.726  | 450.988 ±31.956           | 36.267 ±0.760         |
 
 
 
