@@ -39,10 +39,12 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
     public function selectOneRowThousandTimes(): float
     {
-        $userRepository = (new ORM($this->database, $this->schema))->getRepository(User::class);
+        $orm = new ORM($this->database, $this->schema);
+        $userRepository = $orm->getRepository(User::class);
 
-        return BenchmarkTime::measure(function () use ($userRepository): void {
+        return BenchmarkTime::measure(function () use ($orm, $userRepository): void {
             for ($i = 0; $i < 1000; $i++) {
+                $orm->getEntityCache()->clear();
                 $user = $userRepository->findOne(['id' => 1]);
                 $address = $user?->address->city;
             }

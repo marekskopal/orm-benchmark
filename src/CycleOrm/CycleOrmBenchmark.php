@@ -89,8 +89,12 @@ class CycleOrmBenchmark implements BenchmarkInterface
             new GenerateTypecast(),
         ]);
 
+        // Schema compilation leaves cached reflection statements holding a SQLite read lock,
+        // which would block the database reset between runs — reconnect to release them
+        $this->dbal->database()->getDriver()->disconnect();
+
         // Warm up the DBAL connection so the first benchmark does not pay for connection establishment
-        $this->dbal->database()->query('SELECT 1');
+        $this->dbal->database()->query('SELECT 1')->fetchAll();
     }
 
     private function createOrm(): ORM

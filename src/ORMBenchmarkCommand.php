@@ -74,7 +74,8 @@ final class ORMBenchmarkCommand extends Command
 
         /** @var string $argumentRows */
         $argumentRows = $input->getArgument(self::ARGUMENT_ROWS);
-        $this->initDb((int) $argumentRows);
+        $userRows = (int) $argumentRows;
+        $pdo = $this->initDb($userRows);
 
         $output->writeln('Running benchmark (' . self::BENCHMARK_RUNS . ' runs each)...');
 
@@ -111,6 +112,8 @@ final class ORMBenchmarkCommand extends Command
             ];
 
             for ($run = 0; $run < self::BENCHMARK_RUNS; $run++) {
+                $this->resetDb($pdo, $userRows);
+
                 $selectResults['selectOneRow'][] = $benchmark->selectOneRow();
                 $selectResults['selectOneRowThousandTimes'][] = $benchmark->selectOneRowThousandTimes();
                 $selectResults['selectAllRows'][] = $benchmark->selectAllRows();
@@ -194,9 +197,10 @@ final class ORMBenchmarkCommand extends Command
         $output->writeln('');
     }
 
-    private function initDb(int $userRows): void
+    private function initDb(int $userRows): PDO
     {
         $pdo = new PDO('sqlite:' . __DIR__ . '/../database.sqlite');
+        $pdo->setAttribute(PDO::ATTR_TIMEOUT, 5);
         $schema = file_get_contents(__DIR__ . '/Database/schema.sql');
         if ($schema === false) {
             throw new \RuntimeException('Cannot read schema.sql file');
@@ -224,5 +228,17 @@ final class ORMBenchmarkCommand extends Command
             ]);
         }
         $pdo->commit();
+
+        return $pdo;
+    }
+
+    /**
+     * Removes rows inserted by previous benchmark runs so every ORM and every run
+     * operates on a table of exactly $userRows rows.
+     */
+    private function resetDb(PDO $pdo, int $userRows): void
+    {
+        $pdo->exec('DELETE FROM users WHERE id > ' . $userRows);
+        $pdo->exec('UPDATE sqlite_sequence SET seq = ' . $userRows . ' WHERE name = \'users\'');
     }
 }
