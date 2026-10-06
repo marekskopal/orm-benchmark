@@ -46,7 +46,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
 
         return BenchmarkTime::measure(function () use ($orm, $userRepository): void {
             for ($i = 0; $i < 1000; $i++) {
-                $orm->getEntityCache()->clear();
+                $orm->getIdentityMap()->clear();
                 $user = $userRepository->findOne(['id' => 1]);
                 Blackhole::consume($user?->address->city);
             }
@@ -58,7 +58,7 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
         $userRepository = (new ORM($this->database, $this->schema))->getRepository(User::class);
 
         return BenchmarkTime::measure(function () use ($userRepository): void {
-            foreach (iterator_to_array($userRepository->findAll()) as $user) {
+            foreach ($userRepository->findAll() as $user) {
                 Blackhole::consume($user->address->city);
             }
         });
@@ -153,20 +153,20 @@ final class MarekSkopalOrmBenchmark implements BenchmarkInterface
         assert($address instanceof Address);
 
         return BenchmarkTime::measure(function () use ($orm, $address): void {
-            $orm->getTransactionProvider()->transaction(function () use ($orm, $address): void {
-                $userRepository = $orm->getRepository(User::class);
-                for ($i = 0; $i < 1000; $i++) {
-                    $userRepository->persist(new User(
-                        createdAt: new DateTimeImmutable(),
-                        firstName: 'John' . $i,
-                        middleName: 'Doe' . $i,
-                        lastName: 'Smith' . $i,
-                        email: 'john.dow@example.com' . $i,
-                        isActive: true,
-                        address: $address,
-                    ));
-                }
-            });
+            $unitOfWork = $orm->getUnitOfWork();
+            for ($i = 0; $i < 1000; $i++) {
+                $unitOfWork->persist(new User(
+                    createdAt: new DateTimeImmutable(),
+                    firstName: 'John' . $i,
+                    middleName: 'Doe' . $i,
+                    lastName: 'Smith' . $i,
+                    email: 'john.dow@example.com' . $i,
+                    isActive: true,
+                    address: $address,
+                ));
+            }
+
+            $unitOfWork->flush();
         });
     }
 }

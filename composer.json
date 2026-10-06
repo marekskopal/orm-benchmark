@@ -13,7 +13,7 @@
         "php": ">=8.4",
         "ext-pdo": "*",
         "symfony/console": "^7.4",
-        "marekskopal/orm": "^1.3",
+        "marekskopal/orm": "^2.0.1",
         "nette/utils": "^4.0",
         "cycle/orm": "^2.9",
         "cycle/database": "^2.11",
